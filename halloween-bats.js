@@ -2,24 +2,27 @@
 	"use strict";
 
 	$.fn.halloweenBats = function (options) {
-		var Bat,
-			bats = [],
-			$body= $('body'),
-			innerWidth = $body.innerWidth(),
-			innerHeight = $body.innerHeight(),
-			counter,
-			defaults = {
-				image: 'bats.png', // Path to the image.
-				zIndex: 10000, // The z-index you need.
-				amount: 5, // Bat amount.
-				width: 35, // Image width.
-				height: 20, // Animation frame height.
-				frames: 4, // Amount of animation frames.
-				speed: 20, // Higher value = faster.
-				flickering: 15 // Higher value = slower.
-			};
+
+		var defaults = {
+			image: 'bats.png', // Path to the image.
+			zIndex: 10000, // The z-index you need.
+			amount: 5, // Bat amount.
+			width: 35, // Image width.
+			height: 20, // Animation frame height.
+			frames: 4, // Amount of animation frames.
+			speed: 20, // Higher value = faster.
+			flickering: 15, // Higher value = slower.
+			target: 'body' // Target element
+		};
 
 		options = $.extend({}, defaults, options);
+
+		var Bat,
+			bats = [],
+			$body= $(options.target),
+			innerWidth = $body.innerWidth(),
+			innerHeight = $body.innerHeight(),
+			counter;
 
 		Bat = function () {
 			var self = this,
