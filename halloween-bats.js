@@ -132,11 +132,11 @@
 
 	$.halloweenBats = function (options) {
 		var $window = $(window),
+			$target,
 			plugin,
 			isRunning = false,
 			isActiveWindow = true,
 			bats = [],
-			$body= $('body'),
 			defaults = {
 				image: 'bats.png', // Path to the image.
 				zIndex: 10000, // The z-index you need.
@@ -145,13 +145,16 @@
 				height: 20, // Animation frame height.
 				frames: 4, // Amount of animation frames.
 				speed: 20, // Higher value = faster.
-				flickering: 15 // Higher value = slower.
+				flickering: 15, // Higher value = slower.
+				target: 'body' // Target element
 			};
 
 		options = $.extend({}, defaults, options);
 
-		innerWidth = $body.innerWidth();
-		innerHeight = $body.innerHeight();
+		$target = $(options.target);
+
+		innerWidth = $target.innerWidth();
+		innerHeight = $target.innerHeight();
 
 		plugin = {
 			isRunning: false,
@@ -186,14 +189,14 @@
 		};
 
 		while (bats.length < options.amount) {
-			bats.push(new Bat($body, options));
+			bats.push(new Bat($target, options));
 		}
 
 		plugin.start();
 
 		$window.resize(function () {
-			innerWidth = $body.innerWidth();
-			innerHeight = $body.innerHeight();
+			innerWidth = $target.innerWidth();
+			innerHeight = $target.innerHeight();
 		});
 
 		$window.focus(function() {
