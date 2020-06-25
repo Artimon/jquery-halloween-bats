@@ -1,0 +1,31 @@
+{
+	"bitwise": true,
+	"curly": true,
+	"eqeqeq": true,
+	"esversion": 6,
+	"forin": true,
+	"freeze": true,
+	"futurehostile": true,
+	"globals": {
+		"require": true,
+		"module": true
+	},
+	"latedef": true,
+	"maxcomplexity": 10,
+	"maxdepth": 3,
+	"maxparams": 5,
+	"maxstatements": 25,
+	"nocomma": true,
+	"nonew": false,
+	"shadow": "outer",
+	"singleGroups": false,
+	"strict": true,
+	"undef": true,
+	"unused": true,
+	"browser": true,
+	"browserify": true,
+	"jasmine": true,
+	"jquery": true,
+	"module": true,
+	"worker": true
+}

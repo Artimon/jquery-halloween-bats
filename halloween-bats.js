@@ -1,13 +1,142 @@
 (function ($) {
-	"use strict";
 
-	$.fn.halloweenBats = function (options) {
-		var Bat,
+	'use strict';
+	var innerWidth,
+		innerHeight;
+
+	function Bat($body, options) {
+		this._options = options;
+
+		this._initialize($body);
+	}
+
+	Bat.prototype._initialize = function ($body) {
+		this._$bat = $('<div class="halloween-bat"/>');
+
+		this._x = this.randomPosition('horizontal');
+		this._y = this.randomPosition('vertical');
+		this._tx = this.randomPosition('horizontal');
+		this._ty = this.randomPosition('vertical');
+		this._dx = -5 + Math.random() * 10;
+		this._dy = -5 + Math.random() * 10;
+		this._positionUpdateTimer = this._getPositionUpdateTime();
+
+		this._frame = Math.random() * this._options.frames;
+		this._frame = Math.round(this._frame);
+		this._$bat.css({
+			position: 'absolute',
+			left: this._x + 'px',
+			top: this._y + 'px',
+			zIndex: this._options.zIndex,
+			width: this._options.width + 'px',
+			height: this._options.height + 'px',
+			backgroundImage: 'url(' + this._options.image + ')',
+			backgroundRepeat: 'no-repeat'
+		});
+
+		$body.append(this._$bat);
+	};
+
+	/**
+	 * @returns {number}
+	 * @private
+	 */
+	Bat.prototype._getPositionUpdateTime = function () {
+		return 0.5 + Math.random();
+	};
+
+	/**
+	 * @param {string} direction
+	 * @returns {number}
+	 */
+	Bat.prototype.randomPosition = function (direction) {
+		var screenLength,
+			imageLength;
+
+		if (direction === 'horizontal') {
+			screenLength = innerWidth;
+			imageLength = this._options.width;
+		}
+		else {
+			screenLength = innerHeight;
+			imageLength = this._options.height;
+		}
+
+		return Math.random() * (screenLength - imageLength);
+	};
+
+	Bat.prototype.move = function (deltaTime) {
+		var left,
+			top,
+			length,
+			dLeft,
+			dTop,
+			ddLeft,
+			ddTop;
+
+		left = this._tx - this._x;
+		top = this._ty - this._y;
+
+		length = Math.sqrt(left * left + top * top);
+		length = Math.max(1, length);
+
+		dLeft = this._options.speed * (left / length);
+		dTop = this._options.speed * (top / length);
+
+		ddLeft = (dLeft - this._dx) / this._options.flickering;
+		ddTop = (dTop - this._dy) / this._options.flickering;
+
+		this._dx += ddLeft * deltaTime * 25;
+		this._dy += ddTop * deltaTime * 25;
+
+		this._x += this._dx * deltaTime * 25;
+		this._y += this._dy * deltaTime * 25;
+
+		this._x = Math.max(0, Math.min(this._x, innerWidth - this._options.width));
+		this._y = Math.max(0, Math.min(this._y, innerHeight - this._options.height));
+
+		this.applyPosition();
+
+		this._positionUpdateTimer -= deltaTime;
+		if (this._positionUpdateTimer < 0) {
+			this._tx = this.randomPosition('horizontal');
+			this._ty = this.randomPosition('vertical');
+
+			this._positionUpdateTimer = this._getPositionUpdateTime();
+		}
+	};
+
+	Bat.prototype.applyPosition = function () {
+		this._$bat.css({
+			left: this._x + 'px',
+			top: this._y + 'px'
+		});
+	};
+
+	Bat.prototype.animate = function (deltaTime) {
+		var frame;
+
+		this._frame += 5 * deltaTime;
+
+		if (this._frame >= this._options.frames) {
+			this._frame -= this._options.frames;
+		}
+
+		frame = Math.floor(this._frame);
+
+		this._$bat.css(
+			'backgroundPosition',
+			'0 ' + (frame * -this._options.height) + 'px'
+		);
+	};
+
+	$.halloweenBats = function (options) {
+		var $window = $(window),
+			plugin,
+			isRunning = false,
+			isActiveWindow = true,
 			bats = [],
 			$body= $('body'),
-			innerWidth = $body.innerWidth(),
-			innerHeight = $body.innerHeight(),
-			counter,
 			defaults = {
 				image: 'bats.png', // Path to the image.
 				zIndex: 10000, // The z-index you need.
@@ -21,129 +150,60 @@
 
 		options = $.extend({}, defaults, options);
 
-		Bat = function () {
-			var self = this,
-				$bat = $('<div class="halloweenBat"/>'),
-				x,
-				y,
-				tx,
-				ty,
-				dx,
-				dy,
-				frame;
+		innerWidth = $body.innerWidth();
+		innerHeight = $body.innerHeight();
 
-			/**
-			 * @param {string} direction
-			 * @returns {number}
-			 */
-			self.randomPosition = function (direction) {
-				var screenLength,
-					imageLength;
+		plugin = {
+			isRunning: false,
+			start: function() {
+				var lastTime = Date.now();
 
-				if (direction === 'horizontal') {
-					screenLength = innerWidth;
-					imageLength = options.width;
-				}
-				else {
-					screenLength = innerHeight;
-					imageLength = options.height;
-				}
+				isRunning = true;
 
-				return Math.random() * (screenLength - imageLength);
-			};
+				function animate() {
+					var time = Date.now(),
+						deltaTime = (time - lastTime) / 1000;
 
-			self.applyPosition = function () {
-				$bat.css({
-					left: x + 'px',
-					top: y + 'px'
-				});
-			};
+					lastTime = time;
 
-			self.move = function () {
-				var left,
-					top,
-					length,
-					dLeft,
-					dTop,
-					ddLeft,
-					ddTop;
+					if (isActiveWindow) {
+						$.each(bats, function (index, bat) {
+							bat.move(deltaTime);
+							bat.animate(deltaTime);
+						});
+					}
 
-				left = tx - x;
-				top = ty - y;
-
-				length = Math.sqrt(left * left + top * top);
-				length = Math.max(1, length);
-
-				dLeft = options.speed * (left / length);
-				dTop = options.speed * (top / length);
-
-				ddLeft = (dLeft - dx) / options.flickering;
-				ddTop = (dTop - dy) / options.flickering;
-
-				dx += ddLeft;
-				dy += ddTop;
-
-				x += dx;
-				y += dy;
-
-				x = Math.max(0, Math.min(x, innerWidth - options.width));
-				y = Math.max(0, Math.min(y, innerHeight - options.height));
-
-				self.applyPosition();
-
-				if (Math.random() > 0.95 ) {
-					tx = self.randomPosition('horizontal');
-					ty = self.randomPosition('vertical');
-				}
-			};
-
-			self.animate = function () {
-				frame += 1;
-
-				if (frame >= options.frames) {
-					frame -= options.frames;
+					if (isRunning) {
+						requestAnimationFrame(animate);
+					}
 				}
 
-				$bat.css(
-					'backgroundPosition',
-					'0 ' + (frame * -options.height) + 'px'
-				);
-			};
-
-
-			x = self.randomPosition('horizontal');
-			y = self.randomPosition('vertical');
-			tx = self.randomPosition('horizontal');
-			ty = self.randomPosition('vertical');
-			dx = -5 + Math.random() * 10;
-			dy = -5 + Math.random() * 10;
-
-			frame = Math.random() * options.frames;
-			frame = Math.round(frame);
-
-			$body.append($bat);
-			$bat.css({
-				position: 'absolute',
-				left: x + 'px',
-				top: y + 'px',
-				zIndex: options.zIndex,
-				width: options.width + 'px',
-				height: options.height + 'px',
-				backgroundImage: 'url(' + options.image + ')',
-				backgroundRepeat: 'no-repeat'
-			});
-
-			window.setInterval(self.move, 40);
-			window.setInterval(self.animate, 200);
+				animate();
+			},
+			stop: function() {
+				isRunning = false;
+			}
 		};
 
-		for (counter = 0; counter < options.amount; ++counter) {
-			bats.push(new Bat());
+		while (bats.length < options.amount) {
+			bats.push(new Bat($body, options));
 		}
 
-		$(window).resize(function() {
+		plugin.start();
+
+		$window.resize(function () {
 			innerWidth = $body.innerWidth();
 			innerHeight = $body.innerHeight();
 		});
+
+		$window.focus(function() {
+			isActiveWindow = true;
+		});
+
+		$window.blur(function() {
+			isActiveWindow = false;
+		});
+
+		return plugin;
 	};
 }(jQuery));
