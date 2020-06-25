@@ -20,7 +20,8 @@ var plugin = $.halloweenBats({
 	height: 20, // Animation frame height.
 	frames: 4, // Amount of animation frames.
 	speed: 20, // Higher value = faster.
-	flickering: 15 // Higher value = slower.
+	flickering: 15, // Higher value = slower.
+	target: 'body' // Target element
 });
 
 // Optional, if necessary:
